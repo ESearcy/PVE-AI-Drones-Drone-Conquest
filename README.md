@@ -22,10 +22,10 @@ Simply place any number of these ships in your server, each one will simply be c
 
 Needed Blocks
 
-#Piston# - any number of pistons with this name will expand and retract when a new build job comes in
-#Welder# - all welders turn on when build job starts
-#Projector# - all projectors turn on when build job starts
-#Grinder# - all grinders turn on for last 30 seconds of build job
+-#Piston# - any number of pistons with this name will expand and retract when a new build job comes in
+-#Welder# - all welders turn on when build job starts
+-#Projector# - all projectors turn on when build job starts
+-#Grinder# - all grinders turn on for last 30 seconds of build job
 ===---Player Drone Information: How To Use Them---===
 //todo Create how to video for onlining a personalized defense Drone
 

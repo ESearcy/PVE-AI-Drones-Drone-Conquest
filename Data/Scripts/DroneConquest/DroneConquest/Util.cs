@@ -9,8 +9,11 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
-
+using Sandbox.Game.Gui;
 using Sandbox.ModAPI;
+using Sandbox.ModAPI.Ingame;
+using IMyTerminalBlock = Sandbox.ModAPI.IMyTerminalBlock;
+using ITerminalAction = Sandbox.ModAPI.Interfaces.ITerminalAction;
 
 namespace DroneConquest
 {
@@ -71,6 +74,15 @@ namespace DroneConquest
                 }
             });
         }
+
+        public void SaveBlockActions(IMyTerminalBlock block)
+        {
+            List<ITerminalAction> actions = new List<ITerminalAction>();
+            var b = block;
+            b.GetActions(actions);
+            actions.ForEach(x => { Util.GetInstance().Log("[Drone.IsAlive] IMySmallGatlingGun actions -> " + x.Name, "actions.txt"); });
+        }
+
         public static Util GetInstance()
         {
             if(_instance ==null)

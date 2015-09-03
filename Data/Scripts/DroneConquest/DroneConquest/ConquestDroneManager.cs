@@ -43,6 +43,7 @@ namespace DroneConquest
 
         public void Update()
         {
+            
             //spawner.SpawnShip(ConquestDrones.SmallOne, new Vector3D(0,0,0));
             //spawner.SpawnShip(ConquestDrones.SmallTwo, new Vector3D(0, 0, 0));
 
@@ -57,25 +58,28 @@ namespace DroneConquest
                 MaxNumGuardingDroneSquads = Util.GameSettings.MaxNumGuardingDroneSquads;
             }
             _squads = _squads.Where(x => x.DroneCount() > 0).ToList();
-            _motherships = _motherships.Where(x => x.IsAlive()).ToList();
-
-            if (_motherships.Any())
-            {
-                _mothershipLocation = _motherships.First().GetPosition();
-                _motherships.First().Update(_asteroids.Keys.Select(x=>x.GetPosition()).ToList());
-            }
-
+            
             //i cant think of a way to make this work without two loops, maybe its easy... idk
             foreach (var squad in _squads)
             {
                 UpdateSquadMission(squad);
             }
+
             _combatSites.Clear();
+
             foreach (var squad in _squads)
             {
-                MyAPIGateway.Parallel.Do(delegate { squad.Update(); }, () => SquadCallback(squad.InCombat(), squad.GetLocation()));
+                squad.Update();
+                SquadCallback(squad.InCombat(), squad.GetLocation());
             }
-            
+
+            _motherships = _motherships.Where(x => x.IsAlive()).ToList();
+
+            if (_motherships.Any())
+            {
+                _mothershipLocation = _motherships.First().GetPosition();
+                _motherships.First().Update(_asteroids.Keys.Select(x => x.GetPosition()).ToList());
+            }
 
             ticks++;
         }
@@ -132,7 +136,8 @@ namespace DroneConquest
 
             if (_motherships.Count == 0)
             {
-                type = ConquestDrones.LargeOne;
+                
+                    type = ConquestDrones.LargeOne;
             }
 
             var dro = GetDrones();
@@ -234,7 +239,12 @@ namespace DroneConquest
 
         private int CalculateTargetPriority(Vector3D location)
         {
-            return 2;
+            if (_motherships.Any())
+            {
+                Util.GetInstance().Log("[ConquestDroneManager.CalculateTargetPriority] Number of reinforce squads:" + (5 - ((int)(_motherships[0].GetPosition() - location*3000).Length() / 5000)), logpath);
+                return ((int) (_motherships[0].GetPosition() - location*3000).Length());
+            }
+            return 1;
         }
 
         private void SquadCallback(bool inCombat, Vector3D location)
@@ -282,6 +292,10 @@ namespace DroneConquest
 
         public void StopAllDrones()
         {
+            foreach (var sq in _motherships)
+            {
+                sq.Stop();
+            }
             foreach (var sq in _squads)
             {
                 sq.StopAllDrones();
@@ -317,6 +331,7 @@ namespace DroneConquest
 
         public void AddMothership(MothershipDrone dro)
         {
+            dro.SetOwner(GetMothershipID());
             _motherships.Add(dro);
         }
     }

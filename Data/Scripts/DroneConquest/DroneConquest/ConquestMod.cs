@@ -19,7 +19,7 @@ namespace DroneConquest
     {
         private ConquestDroneManager cManager=null;
         private PlayerDroneManager pManager=null;
-        private int _findDroneRate = 1234;
+        private int _findDroneRate = 1001;
         private int _conquestUpdateRate = 13;
         public static double MaxEngagementRange = 3000;
         private int _logSaveRate = 2000;
@@ -52,7 +52,7 @@ namespace DroneConquest
                         .Log("[ConquestMod.Update] loaded game settings -> player droneCount:" +
                              Util.GameSettings.MaxPlayerDroneCount + " conquest dronepersquad:" +
                              Util.GameSettings.MaxNumDronesPerConquestSquad + " conquest numdronesquads:" +
-                             Util.GameSettings.MaxNumConquestSquads);
+                             Util.GameSettings.MaxNumConquestSquads, "ConquestMod.txt");
                 }
 
                 if (ticks%_conquestUpdateRate == 0)
@@ -117,12 +117,6 @@ namespace DroneConquest
                 foreach (var monno in cManager.GetMotherships())
                 {
                     Drones.Add(monno);
-                }
-
-                
-                foreach (var drone in Drones)
-                {
-                    
                 }
             }
             catch (Exception e)
@@ -195,50 +189,48 @@ namespace DroneConquest
             {
                 try
                 {
-                    Drone drone = new Drone(entity, droneType.Broadcasting);
-                    if (drone.IsAlive())
+                    
+                    switch (droneType.DroneType)
                     {
-                        switch (droneType.DroneType)
-                        {
-                            case DroneTypes.PlayerDrone:
-                                {
-                                    
-                                    PlayerDrone dro = new PlayerDrone(entity, droneType.Broadcasting);
-                                    Util.GetInstance().Log("[ConquestMod.SetUpDrone] Found New Player Drone. id=" + dro.GetOwnerId());
-                                    pManager.AddDrone(dro);
-                                    
-                                    break;
-                                }
-                            case DroneTypes.MothershipDrone:
-                                {
-                                    MothershipDrone dro = new MothershipDrone(entity, droneType.Broadcasting);
-                                    entity.DisplayName = "";
-                                    ((IMyCubeGrid)entity).Name = "";
-                                    ((IMyCubeGrid)entity).ChangeGridOwnership(cManager.GetMothershipID(), MyOwnershipShareModeEnum.Faction);
-                                    ((IMyCubeGrid)entity).UpdateOwnership(cManager.GetMothershipID(), true);
-                                    Util.GetInstance().Log("[ConquestMod.SetUpDrone] found new conquest drone");
+                        case DroneTypes.PlayerDrone:
+                            {
 
-                                    cManager.AddMothership(dro);
-                                    break;
-                                }
-                            case DroneTypes.ConquestDrone:
-                                {
-                                    ConquestDrone dro = new ConquestDrone(entity, droneType.Broadcasting);
-                                    entity.DisplayName = "";
-                                    ((IMyCubeGrid)entity).Name = "";
-                                    ((IMyCubeGrid)entity).ChangeGridOwnership(cManager.GetMothershipID(), MyOwnershipShareModeEnum.Faction);
-                                    ((IMyCubeGrid)entity).UpdateOwnership(cManager.GetMothershipID(), true);
-                                    Util.GetInstance().Log("[ConquestMod.SetUpDrone] found new conquest drone");
+                                PlayerDrone dro = new PlayerDrone(entity, droneType.Broadcasting);
+                                Util.GetInstance().Log("[ConquestMod.SetUpDrone] Found New Player Drone. id=" + dro.GetOwnerId());
+                                pManager.AddDrone(dro);
 
-                                    cManager.AddDrone(dro);
-                                    break;
-                                }
-                            default:
-                                {
-                                    //Util.Notify("broken drone type");
-                                    break;
-                                }
-                        }
+                                break;
+                            }
+                        case DroneTypes.MothershipDrone:
+                            {
+                                MothershipDrone dro = new MothershipDrone(entity, droneType.Broadcasting);
+                                entity.DisplayName = "";
+                                ((IMyCubeGrid)entity).Name = "";
+                                ((IMyCubeGrid)entity).ChangeGridOwnership(cManager.GetMothershipID(), MyOwnershipShareModeEnum.Faction);
+                                ((IMyCubeGrid)entity).UpdateOwnership(cManager.GetMothershipID(), true);
+                                Util.GetInstance().Log("[ConquestMod.SetUpDrone] found new conquest drone");
+
+                                cManager.AddMothership(dro);
+                                break;
+                            }
+                        case DroneTypes.ConquestDrone:
+                            {
+                                ConquestDrone dro = new ConquestDrone(entity, droneType.Broadcasting);
+                                entity.DisplayName = "";
+                                ((IMyCubeGrid)entity).Name = "";
+                                ((IMyCubeGrid)entity).ChangeGridOwnership(cManager.GetMothershipID(), MyOwnershipShareModeEnum.Faction);
+                                ((IMyCubeGrid)entity).UpdateOwnership(cManager.GetMothershipID(), true);
+                                Util.GetInstance().Log("[ConquestMod.SetUpDrone] found new conquest drone");
+
+                                cManager.AddDrone(dro);
+                                break;
+                            }
+                        default:
+                            {
+                                //Util.Notify("broken drone type");
+                                break;
+                            }
+                        
 
 
                     }

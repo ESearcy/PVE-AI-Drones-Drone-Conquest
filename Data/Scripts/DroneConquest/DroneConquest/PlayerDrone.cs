@@ -35,10 +35,20 @@ namespace DroneConquest
                     switch (_currentOrder)
                     {
                         case ActionTypes.Guard:
-                            if (standing == Standing.Hostile)
-                                Guard(location);
+                            if (mode == DroneModes.AtRange)
+                            {
+                                if (standing == Standing.Hostile)
+                                    Guard(location);
+                                else
+                                    Orbit(location);
+                            }
                             else
-                                Orbit(location);
+                            {
+                                if (standing == Standing.Hostile)
+                                    AgressiveFormation(location);
+                                else
+                                    Formation(location);
+                            }
                             break;
                         case ActionTypes.Orbit:
                             Orbit(location);
@@ -64,6 +74,60 @@ namespace DroneConquest
             }
             Util.GetInstance().Log("[Drone.Guard] End: " + myNumber);
             ticks++;
+        }
+
+        private Vector3D myRelativeFormation = Vector3D.Zero;
+        Random r = new Random();
+        private void Formation(Vector3D location)
+        {
+            
+
+            GetRelativeVector();
+
+            var formationVector = location + myRelativeFormation;
+            navigation.AvoidNearbyEntities();
+
+            Util.GetInstance().Log("Formation position: pos:" + (formationVector + myRelativeFormation), "formations.txt");
+            _beaconName = "FR";
+            navigation.Follow(formationVector, 0);
+            NameBeacon();
+        }
+
+        private void GetRelativeVector()
+        {
+            if (myRelativeFormation == Vector3D.Zero)
+            {
+                int x = r.Next(70, 100);
+                int y = r.Next(70, 100);
+                int z = r.Next(70, 100);
+
+                Util.GetInstance().Log("Relative formation position: x:" + x + " y:" + y + " z:" + z, "formations.txt");
+
+                x = x * ((r.Next(2) > 0) ? 1 : -1);
+                y = y * ((r.Next(2) > 0) ? 1 : -1);
+                z = z * ((r.Next(2) > 0) ? 1 : -1);
+                myRelativeFormation = new Vector3D(x, y, z);
+            }
+        }
+
+        private void AgressiveFormation(Vector3D location)
+        {
+            GetRelativeVector();
+
+            var formationVector = location + myRelativeFormation;
+            navigation.AvoidNearbyEntities();
+
+            if (FindNearbyAttackTarget())
+            {
+                Util.GetInstance().Log("In Combat: " +location, "formations.txt");
+                _beaconName = "FR/AT";
+                return;
+            }
+
+            Util.GetInstance().Log("Formation position: pos:" + (formationVector + myRelativeFormation), "formations.txt");
+
+            navigation.Follow(formationVector, 0);
+            NameBeacon();
         }
 
         private void FindNearbyStuff()
@@ -126,6 +190,9 @@ namespace DroneConquest
                                 case "standing":
                                     SetStanding(commandValue);
                                     break;
+                                case "mode":
+                                    SetMode(commandValue);
+                                    break;
                             }
                         }
                     }
@@ -136,8 +203,23 @@ namespace DroneConquest
                 Util.GetInstance().LogError(e.ToString());
             }
         }
+        DroneModes mode = DroneModes.AtRange;
+        private void SetMode(string[] args)
+        {
+            if (args.Length != 2 && args[1].Length > 1)
+                return;
 
-        
+            if (args[1].ToLower().Contains("atrange"))
+            {
+                mode = DroneModes.AtRange;
+            }
+            else if (args[1].ToLower().Contains("fighter"))
+            {
+                mode = DroneModes.Fighter;
+            }
+        }
+
+
         private void SetStanding(string[] args)
         {
             if (args.Length != 2 && args[1].Length > 1)

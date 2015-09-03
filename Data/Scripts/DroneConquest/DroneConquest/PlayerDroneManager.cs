@@ -43,7 +43,7 @@ namespace DroneConquest
             }
             foreach (var pair in DroneOwners)
             {
-                MyAPIGateway.Parallel.Do(delegate { ParallelUpdateDrones(pair); });
+                ParallelUpdateDrones(pair);
             }
             
 

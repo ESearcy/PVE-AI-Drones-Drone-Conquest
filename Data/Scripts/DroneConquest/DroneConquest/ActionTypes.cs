@@ -18,6 +18,11 @@
         Reporting
     }
 
+    public enum DroneModes
+    {
+        AtRange,
+        Fighter
+    }
     public enum ConquestDrones
     {
         SmallOne,

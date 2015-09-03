@@ -19,7 +19,7 @@ namespace DroneConquest
         {
             _isLoaded = true;
             
-            Util.GetInstance().DebuggingOn = true;
+            //Util.GetInstance().DebuggingOn = true;
             
             MyAPIGateway.Utilities.MessageEntered += ChatMessageHandler.HandleMessage;
             _ticks = 0;
@@ -77,6 +77,5 @@ namespace DroneConquest
         public override void UpdateAfterSimulation()
         {
         }
-
     }
 }

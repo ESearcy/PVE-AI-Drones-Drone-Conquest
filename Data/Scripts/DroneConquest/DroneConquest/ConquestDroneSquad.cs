@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Sandbox.Common.ObjectBuilders;
 using Sandbox.ModAPI;
@@ -73,10 +74,13 @@ namespace DroneConquest
 
                 //update mission details
 
-                foreach (var drone in _drones)
+                foreach (var x in _drones)
                 {
-                    MyAPIGateway.Parallel.Do(delegate { drone.Update(location); });
+                    MyAPIGateway.Parallel.Do(delegate { try { x.Update(location); } catch (Exception) { } });
+                    //x.Update(location);
                 }
+                //_drones.ForEach(x => x.Update(location));
+
             }
             catch (Exception e)
             {

@@ -30,10 +30,13 @@ namespace DroneConquest
         {
             UpdateComposition();
             Util.GetInstance().Log("[PlayerDroneSquad.Update] Updating "+_drones.Count+" Drones from squad "+myid);
-            foreach (var drone in _drones)
+            
+            foreach (var x in _drones)
             {
-                MyAPIGateway.Parallel.Do(delegate { drone.Update(location); });
+                MyAPIGateway.Parallel.Do(delegate { try { x.Update(location); } catch (Exception) { } });
+                //x.Update(location);
             }
+            //_drones.ForEach(x => x.Update(location));
         }
 
         public Vector3D GetLocation()

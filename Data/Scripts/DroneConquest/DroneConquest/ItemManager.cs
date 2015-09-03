@@ -30,13 +30,13 @@ namespace DroneConquest
             }
         }
 
-        private static void Reload(IMyInventoryOwner gun, SerializableDefinitionId ammo, bool reactor = false)
+        private static void Reload(IMyInventoryOwner gun, SerializableDefinitionId ammo, bool reactor = false, int i1=1)
         {
             var cGun = gun;
             IMyInventory inv = (IMyInventory)cGun.GetInventory(0);
             MyFixedPoint point = inv.GetItemAmount(ammo, MyItemFlags.None | MyItemFlags.Damaged);
 
-            if (point.RawValue > 10000)
+            if (point.RawValue > 10000 && !reactor)
                 return;
             inv.Clear();
 
@@ -47,7 +47,7 @@ namespace DroneConquest
             {
                 ii = new MyObjectBuilder_InventoryItem()
                 {
-                    Amount = 1,
+                    Amount = i1,
                     Content = new MyObjectBuilder_Ingot() { SubtypeName = ammo.SubtypeName }
                 };
             }
@@ -67,7 +67,7 @@ namespace DroneConquest
             return gun is IMySmallGatlingGun || gun is IMyLargeGatlingTurret || gun is IMyLargeInteriorTurret;
         }
 
-        public static void ReloadReactors(List<IMySlimBlock> reactors)
+        public static void ReloadReactors(List<IMySlimBlock> reactors, int i1 = 1)
         {
             for (int i = 0; i < reactors.Count; i++)
             {
@@ -76,7 +76,7 @@ namespace DroneConquest
                     reactors.RemoveAt(i--);
                     continue;
                 }
-                Reload((IMyInventoryOwner)reactors[i].FatBlock, _uraniumFuel, true);
+                Reload((IMyInventoryOwner)reactors[i].FatBlock, _uraniumFuel, true, i1);
             }
         }
 

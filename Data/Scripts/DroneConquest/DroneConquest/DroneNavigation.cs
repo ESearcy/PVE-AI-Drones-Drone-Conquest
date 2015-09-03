@@ -509,25 +509,6 @@ namespace DroneConquest
             return false;
         }
 
-
-
-        bool FlyingTwords(Vector3D dest, Vector3D velocity)
-        {
-            int dir = 0;
-            if (Ship == null || _shipControls == null)
-                return false;
-
-            NavInfo nav = new NavInfo(Ship.GetPosition(), dest, (IMyEntity)_shipControls);
-
-            if (velocity.X*nav.Direction.X > 0)
-                dir++;
-            if (velocity.Y * nav.Direction.Y > 0)
-                dir++;
-            if (velocity.Z * nav.Direction.Z > 0)
-                dir++;
-            //Util.Notify((velocity.X * nav.Direction.X > 0) + " : " + (velocity.Y * nav.Direction.Y > 0) + " : " + (velocity.Z * nav.Direction.Z > 0));
-            return dir >= 2;
-        }
         //Working
         public bool Follow(Vector3D position)
         {
@@ -555,6 +536,53 @@ namespace DroneConquest
                     else
                     {
                         if (Math.Abs(nav.Direction.Length()) > FollowRange)
+                        {
+                            _shipControls.MoveAndRotate(nav.Direction, nav.Rotation, nav.Roll);
+                            AlignTo(position);
+                        }
+                    }
+
+                    if (Ship.Physics.LinearVelocity.Normalize() > MaxSpeed)
+                    {
+                        _shipControls.MoveAndRotateStopped();
+                    }
+                }
+                return true;
+            }
+
+            //indicates the drone was avoiding rather than following
+            return false;
+        }
+
+        public bool Follow(Vector3D position, int followDistance)
+        {
+            if (Ship != null && !Avoiding && _shipControls != null)
+            {
+                NavInfo nav = new NavInfo(Ship.GetPosition(), position, (IMyEntity)_shipControls);
+
+                var distance = (position - Ship.GetPosition()).Length();
+                MaxSpeed = distance > followDistance ? distance / ApproachSpeedMod : 40;
+                if (distance > 100)
+                    MaxSpeed = distance > followDistance ? distance / ApproachSpeedMod : 100;
+
+                if (Ship.Physics.LinearVelocity.Normalize() > MaxSpeed)
+                {
+                    _shipControls.MoveAndRotateStopped();
+                }
+                else
+                {
+                    AlignTo(position);
+
+                    if (nav.Direction.Length() < followDistance)
+                    {
+                        if (Ship.Physics.LinearVelocity.Normalize() > 0)
+                        {
+                            _shipControls.MoveAndRotateStopped();
+                        }
+                    }
+                    else
+                    {
+                        if (Math.Abs(nav.Direction.Length()) > followDistance)
                         {
                             _shipControls.MoveAndRotate(nav.Direction, nav.Rotation, nav.Roll);
                             AlignTo(position);
@@ -882,7 +910,8 @@ namespace DroneConquest
             }
             catch (Exception e)
             {
-                Util.GetInstance().LogError(e.ToString());
+                // i dont care about this error
+                //Util.GetInstance().LogError(e.ToString());
             }
             return Avoiding;
         }

@@ -20,6 +20,7 @@ namespace DroneConquest
         private int ticks = 0;
         public void Update(Vector3D location)
         {
+            
             if (ticks%5 == 0)
                 FindNearbyStuff();
             try
@@ -31,6 +32,7 @@ namespace DroneConquest
             {
                 Util.GetInstance().LogError(e.ToString());
             }
+            
             ticks++;
         }
 
@@ -54,7 +56,7 @@ namespace DroneConquest
 
                     if (closeItem is IMyVoxelBase)
                     {
-                        //_entitiesNearDcDrones.Add(closeItem)
+                        ConquestDroneManager.GetInstance().AddDiscoveredAsteroid(closeItem as IMyVoxelBase);
                         AddNearbyAsteroid((IMyVoxelBase)closeItem);
                     }
                 }

@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using Sandbox.Common;
 using Sandbox.Common.ObjectBuilders;
 using Sandbox.Game.Entities;
+using Sandbox.Game.Gui;
 using Sandbox.Game.World;
 using Sandbox.ModAPI;
 using Sandbox.ModAPI.Ingame;
@@ -20,6 +21,7 @@ using IMyShipMergeBlock = Sandbox.ModAPI.Ingame.IMyShipMergeBlock;
 using IMySlimBlock = Sandbox.ModAPI.IMySlimBlock;
 using IMyTerminalBlock = Sandbox.ModAPI.Ingame.IMyTerminalBlock;
 using IMyThrust = Sandbox.ModAPI.IMyThrust;
+using ITerminalAction = Sandbox.ModAPI.Interfaces.ITerminalAction;
 
 namespace DroneConquest
 {
@@ -37,6 +39,8 @@ namespace DroneConquest
         internal string _healthPercent = 100 + "%";
         internal ITerminalAction _fireGun;
         internal ITerminalAction _fireRocket;
+        internal ITerminalAction _blockOn;
+        internal ITerminalAction _blockOff;
 
         internal string _beaconName = "CombatDrone";
 
@@ -88,22 +92,35 @@ namespace DroneConquest
         }
 
         
-
+        Random _r = new Random();
         public Drone(IMyEntity ent, BroadcastingTypes broadcasting)
         {
+            
             var ship = (IMyCubeGrid)ent;
             double maxEngagementRange = ConquestMod.MaxEngagementRange;
             broadcastingType = broadcasting;
-            Random _r = new Random();
+            
             Ship = ship;
             var lstSlimBlock = new List<IMySlimBlock>();
             
             GridTerminalSystem = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(ship);
 
-
-            
             //If it has any type of cockipt
             ship.GetBlocks(lstSlimBlock, (x) => x.FatBlock is IMyShipController);
+            FindWeapons();
+
+            if (_manualRockets.Count > 0 && _manualRockets[0] != null)
+            {
+                var actions = new List<ITerminalAction>();
+                var block = (IMySmallMissileLauncher)_manualRockets[0].FatBlock;
+                block.GetActions(actions);
+
+                _fireRocket = block.GetActionWithName("Shoot_once");
+                _fireGun = block.GetActionWithName("Shoot");
+                _blockOff = block.GetActionWithName("OnOff_Off");
+                _blockOn = block.GetActionWithName("OnOff_On");
+            }
+            Util.GetInstance().Log("[Drone.IsAlive] Has Missile attack -> " + (_fireRocket != null) + " Has Gun Attack " + (_fireRocket != null), "drone.txt");
 
             //If no cockpit the ship is either no ship or is broken.
             if (lstSlimBlock.Count != 0)
@@ -116,6 +133,7 @@ namespace DroneConquest
                 
                 #region Activate Beacons && Antennas
 
+                
                 //Maximise radius on antennas and beacons.
                 lstSlimBlock.Clear();
                 ship.GetBlocks(lstSlimBlock, (x) => x.FatBlock is IMyRadioAntenna);
@@ -229,23 +247,23 @@ namespace DroneConquest
             foreach (var w in _allWeapons)
             {
                 if (isOn)
-                    ((Sandbox.ModAPI.IMyTerminalBlock)w.FatBlock).GetActionWithName("OnOff_On").Apply(w.FatBlock);
+                    _blockOn.Apply(w.FatBlock);
                 else
-                    ((Sandbox.ModAPI.IMyTerminalBlock)w.FatBlock).GetActionWithName("OnOff_Off").Apply(w.FatBlock);
+                    _blockOff.Apply(w.FatBlock);
             }
             foreach (var w in _manualGuns)
             {
                 if (isOn)
-                    ((Sandbox.ModAPI.IMyTerminalBlock)w.FatBlock).GetActionWithName("OnOff_On").Apply(w.FatBlock);
+                    _blockOn.Apply(w.FatBlock);
                 else
-                    ((Sandbox.ModAPI.IMyTerminalBlock)w.FatBlock).GetActionWithName("OnOff_Off").Apply(w.FatBlock);
+                    _blockOff.Apply(w.FatBlock);
             }
             foreach (var w in _manualRockets)
             {
                 if (isOn)
-                    ((Sandbox.ModAPI.IMyTerminalBlock)w.FatBlock).GetActionWithName("OnOff_On").Apply(w.FatBlock);
+                    _blockOn.Apply(w.FatBlock);
                 else
-                    ((Sandbox.ModAPI.IMyTerminalBlock)w.FatBlock).GetActionWithName("OnOff_Off").Apply(w.FatBlock);
+                    _blockOff.Apply(w.FatBlock);
             }
         }
 
@@ -263,36 +281,16 @@ namespace DroneConquest
             _manualGuns.Clear();
             _manualRockets.Clear();
 
-            try
-            {
-                Ship.GetBlocks(_allWeapons, (x) => x.FatBlock != null && (x.FatBlock is IMySmallMissileLauncher));
-                Ship.GetBlocks(_allWeapons, (x) => x.FatBlock != null && (x.FatBlock is IMySmallGatlingGun));
 
-                Ship.GetBlocks(_allReactors, (x) => x.FatBlock != null && x.FatBlock is IMyReactor);
-                Ship.GetBlocks(_manualGuns, (x) => x.FatBlock != null && (x.FatBlock is IMyUserControllableGun));
-            }
-            catch
-            {
-                //sometimes rthis just throws up and I havent been able to figure out why
-            }
+            Ship.GetBlocks(_manualRockets, (x) => x.FatBlock != null && (x.FatBlock is IMySmallMissileLauncher));
+            Ship.GetBlocks(_manualGuns, (x) => x.FatBlock != null && (x.FatBlock is IMySmallGatlingGun));
 
-            if (_manualGuns.Count > 0)
-            {
-                var actions = new List<ITerminalAction>();
-                MyAPIGateway.TerminalActionsHelper.GetActions(_manualGuns[0].FatBlock.GetType(), actions, (x) => x.Id.Equals("Shoot"));
-                _fireGun = actions[0];
-            }
+            Ship.GetBlocks(_allReactors, (x) => x.FatBlock != null && x.FatBlock is IMyReactor);
+            Ship.GetBlocks(_allWeapons, (x) => x.FatBlock != null && (x.FatBlock is IMyUserControllableGun));
 
-            //Gets information for big ship missle launchers too!
-            Ship.GetBlocks(_manualRockets, (x) => x.FatBlock != null && x.FatBlock is IMySmallMissileLauncher);
-            if (_manualRockets.Count > 0)
-            {
-                var actions = new List<ITerminalAction>();
-                MyAPIGateway.TerminalActionsHelper.GetActions(_manualRockets[0].FatBlock.GetType(), actions, (x) => x.Id.Equals("ShootOnce"));
-                _fireRocket = actions[0];
-            }
+            
 
-            _weaponCount = _manualGuns.Count(x => (x.FatBlock).IsWorking || (x.FatBlock).IsFunctional);
+            _weaponCount = _allWeapons.Count(x => (x.FatBlock).IsWorking || (x.FatBlock).IsFunctional);
         }
 
         //All three must be true
@@ -319,15 +317,7 @@ namespace DroneConquest
                     shipWorking = false;
                 }
                 
-                //FindWeapons();
-                //var weapCount = _manualGuns.Count(x => (x.FatBlock).IsFunctional || (x.FatBlock).IsWorking) +
-                //_manualRockets.Count(x => (x.FatBlock).IsFunctional || (x.FatBlock).IsWorking);
-
-                //if (weapCount == 0)
-                //{
-                //    errors += "The ship has no weapons: ";
-                //    shipWorking = false;
-                //}
+                
                 List<IMyTerminalBlock> allBlocks = new List<IMyTerminalBlock>();
                 GridTerminalSystem.GetBlocks(allBlocks);
                 if (Ship != null && allBlocks.Count < 10)
@@ -358,7 +348,7 @@ namespace DroneConquest
                     errors += "The ship is trashed: ";
                     shipWorking = false;
                 }
-               
+                Util.GetInstance().Log("[Drone.IsAlive] Alive -> "+_allReactors.Count(x=>x.FatBlock.IsFunctional)+" : " + errors, "drone.txt");
                 if (!shipWorking && navigation != null)
                 {
                     navigation.TurnOffGyros(false);
@@ -443,11 +433,11 @@ namespace DroneConquest
         }
 
         //usses ammo manager to reload the inventories of the reactors and guns (does not use cargo blcks)
-        public void ReloadWeaponsAndReactors()
+        public void ReloadWeaponsAndReactors(int i =1)
         {
             Util.GetInstance().Log("Number of weapons reloading");
             ItemManager.ReloadGuns(_manualGuns);
-            ItemManager.ReloadReactors(_allReactors);
+            ItemManager.ReloadReactors(_allReactors, i);
         }
 
 
@@ -459,24 +449,23 @@ namespace DroneConquest
             SetWeaponPower(doFire);
             if (doFire)
             {
-                foreach (var gun in _allWeapons)
+                foreach (var gun in _manualGuns)
                 {
                     if (((IMyUserControllableGun)gun.FatBlock).IsShooting != true)
                         _fireGun.Apply(gun.FatBlock);
                 }
-                //if ((DateTime.Now - lastRocketFired).TotalMilliseconds > 300)
-                //{
-                    
-                //    var launcher = _manualRockets[missileStaggeredFireIndex];
-                //    _fireRocket.Apply(launcher.FatBlock);
-                //    if (missileStaggeredFireIndex + 1 < _manualRockets.Count())
-                //    {
-                //        missileStaggeredFireIndex++;
-                //    }
-                //    else
-                //        missileStaggeredFireIndex = 0;
-                //    lastRocketFired=DateTime.Now;
-                //}
+                if ((DateTime.Now - lastRocketFired).TotalMilliseconds > 500)
+                {
+                    var launcher = _manualRockets[missileStaggeredFireIndex];
+                    _fireRocket.Apply(launcher.FatBlock);
+                    if (missileStaggeredFireIndex + 1 < _manualRockets.Count())
+                    {
+                        missileStaggeredFireIndex++;
+                    }
+                    else
+                        missileStaggeredFireIndex = 0;
+                    lastRocketFired = DateTime.Now;
+                }
             }
 
             
@@ -562,11 +551,11 @@ namespace DroneConquest
                                 reactorBlocks.FirstOrDefault(
                                     x => (((IMyPowerProducer)x).CurrentPowerOutput > 0 && x.IsWorking) && !isFriendly);
 
-                        if (isDrone && isOnline && !isMothership)
+                        if (isDrone && isOnline)
                         {
                             nearbyDrones.Add(grid, droneControl);
                         }
-                        else if (isOnline && !isMothership)
+                        else if (isOnline)
                         {
                             nearbyOnlineShips.Add(grid, shipPower ?? droneControl);
                         }
@@ -986,8 +975,6 @@ namespace DroneConquest
         // for thoes pesky drones that just dont care about the safty of others
         public void Detonate()
         {
-
-            
             ShipControls.MoveAndRotateStopped();
             List<IMyTerminalBlock> warHeads = new List<IMyTerminalBlock>();
             GridTerminalSystem.GetBlocksOfType<IMyWarhead>(warHeads);
@@ -1003,12 +990,14 @@ namespace DroneConquest
 
         public void Orbit(Vector3D lastTargetPosition)
         {
+            _beaconName = "OR";
             navigation.AvoidNearbyEntities();
             navigation.Orbit(lastTargetPosition);
         }
 
         public void Orbit(List<Vector3D> positions)
         {
+            _beaconName = "";
             navigation.MaxSpeed = 40;
             navigation.AvoidNearbyEntities();
             navigation.Orbit(positions);
@@ -1017,6 +1006,7 @@ namespace DroneConquest
         public void CombatOrbit(Vector3D lastTargetPosition)
         {
             _beaconName = "OR/AT";
+            navigation.AvoidNearbyEntities();
             navigation.CombatOrbit(lastTargetPosition);
 
         }

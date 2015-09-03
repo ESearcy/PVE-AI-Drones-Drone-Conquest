@@ -58,7 +58,7 @@ namespace DroneConquest
                 if (ticks%_conquestUpdateRate == 0)
                 {
                     FindAllDrones();
-                    CalculateDistances();
+                    //CalculateDistances();
                     pManager.Update();
                     cManager.Update();
                 }

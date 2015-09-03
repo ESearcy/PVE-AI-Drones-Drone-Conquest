@@ -51,7 +51,7 @@ namespace DroneConquest
             {
                 try
                 {
-                    if (closeItem is Sandbox.ModAPI.IMyCubeGrid)
+                    if (closeItem is IMyCubeGrid && !closeItem.Transparent && closeItem.Physics.Mass > 2000)
                         AddNearbyFloatingItem(closeItem);
 
                     if (closeItem is IMyVoxelBase)

@@ -101,8 +101,8 @@ namespace DroneConquest
         // to avoid multipule targets at once, Add all vectors together and devide by number of vectors
         public void AvoidTarget(Vector3D direction)
         {
-            
-            _shipControls.MoveAndRotate((direction+Ship.Physics.LinearVelocity)/2, Vector2.Zero, 0);
+
+            _shipControls.MoveAndRotate((direction / 4 * 3 + (Ship.Physics.LinearVelocity / 4 * 1)), Vector2.Zero, 0);
             AlignTo(previousAlign);
         }
 

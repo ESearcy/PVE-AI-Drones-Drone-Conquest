@@ -46,7 +46,7 @@ namespace DroneConquest
                     if (!MyAPIGateway.Utilities.FileExistsInLocalStorage(settingsFile, typeof(Util)))
                     {
 
-                        GameSettings = new XmlGameSettings() { MaxNumConquestSquads = 8, MaxNumDronesPerConquestSquad = 2, MaxPlayerDroneCount = 2 ,MaxNumGuardingDroneSquads = 1};
+                        GameSettings = new XmlGameSettings() { MaxNumConquestSquads = 8, MaxNumDronesPerConquestSquad = 1, MaxPlayerDroneCount = 2 ,MaxNumGuardingDroneSquads = 2};
 
                         var xmlstring = MyAPIGateway.Utilities.SerializeToXML(GameSettings);
 

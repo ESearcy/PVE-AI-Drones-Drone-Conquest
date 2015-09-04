@@ -3,8 +3,8 @@ Create a fork of this repository
 Create a new branch
 Do your changes in this branch
 Commit to this branch
-When it is done, create a pull request for me to bring your branch into the main code aftr I review it.
 
+When it is done, create a pull request for me to bring your branch into the main code aftr I review it.
 
 AIDroneConquest
 This is a project I started to help give players a more immersive experience while in the game.

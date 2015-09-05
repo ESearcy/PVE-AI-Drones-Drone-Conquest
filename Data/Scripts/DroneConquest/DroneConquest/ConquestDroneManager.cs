@@ -23,7 +23,7 @@ namespace DroneConquest
         private int DronesPerConquestSquad = 4;
         public int MaxNumGuardingDroneSquads = 3;
         public int NumGuardingDroneSquads;
-        public static int DroneMaxRange = 15000;
+        public static int DroneMaxRange = 10000;
         string logpath = "generatemission.txt";
         Random r = new Random();
 
@@ -56,6 +56,7 @@ namespace DroneConquest
                 DronesPerConquestSquad = Util.GameSettings.MaxNumDronesPerConquestSquad;
                 MaxNumConquestSquads = Util.GameSettings.MaxNumConquestSquads;
                 MaxNumGuardingDroneSquads = Util.GameSettings.MaxNumGuardingDroneSquads;
+                DroneMaxRange = Util.GameSettings.ConquestInfluenceRange;
             }
             _squads = _squads.Where(x => x.DroneCount() > 0).ToList();
             
@@ -239,11 +240,11 @@ namespace DroneConquest
 
         private int CalculateTargetPriority(Vector3D location)
         {
-            if (_motherships.Any())
-            {
-                Util.GetInstance().Log("[ConquestDroneManager.CalculateTargetPriority] Number of reinforce squads:" + (5 - ((int)(_motherships[0].GetPosition() - location*3000).Length() / 5000)), logpath);
-                return ((int) (_motherships[0].GetPosition() - location*3000).Length());
-            }
+            //if (_motherships.Any())
+            //{
+            //    Util.GetInstance().Log("[ConquestDroneManager.CalculateTargetPriority] Number of reinforce squads:" + (5 - ((int)(_motherships[0].GetPosition() - location*3000).Length() / 5000)), logpath);
+            //    return ((int) (_motherships[0].GetPosition() - location*3000).Length());
+            //}
             return 1;
         }
 

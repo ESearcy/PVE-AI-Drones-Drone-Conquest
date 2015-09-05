@@ -57,7 +57,7 @@ namespace DroneConquest
                 s[0].CubeBlocks.ForEach(b => max = Vector3I.Max(b.Min, max));
                 float size = new Vector3(max - min).Length();
 
-                var freeplace = MyAPIGateway.Entities.FindFreePlace(location, 5000);
+                var freeplace = MyAPIGateway.Entities.FindFreePlace(location, size*5f);
                 if (freeplace == null)
                     return null;
 
@@ -77,7 +77,8 @@ namespace DroneConquest
 
                 foreach (var ship in shipMade)
                 {
-                    
+                    ship.DisplayName = "";
+                    (ship).Name = "";
                     try
                     {
                         if (type != ConquestDrones.LargeOne)
@@ -92,7 +93,7 @@ namespace DroneConquest
                     }
                     catch (Exception e)
                     {
-                        MyAPIGateway.Entities.RemoveEntity(ship as IMyEntity);
+                        MyAPIGateway.Entities.RemoveEntity(ship);
                         Util.GetInstance().Log("The grid was a fake!!!", "Spawner.txt");
                     }
                 }

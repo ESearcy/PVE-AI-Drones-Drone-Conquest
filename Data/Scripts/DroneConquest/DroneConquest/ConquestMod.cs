@@ -29,7 +29,7 @@ namespace DroneConquest
         {
             
         }
-
+        private bool displayedHelp = false;
         public void Update(int ticks)
         {
             try
@@ -53,6 +53,13 @@ namespace DroneConquest
                              Util.GameSettings.MaxPlayerDroneCount + " conquest dronepersquad:" +
                              Util.GameSettings.MaxNumDronesPerConquestSquad + " conquest numdronesquads:" +
                              Util.GameSettings.MaxNumConquestSquads, "ConquestMod.txt");
+
+                    if (!displayedHelp)
+                    {
+                        
+                        Util.GetInstance().Help();
+                        displayedHelp = true;
+                    }
                 }
 
                 if (ticks%_conquestUpdateRate == 0)
@@ -74,52 +81,6 @@ namespace DroneConquest
             }
             catch (Exception e)
 
-            {
-                Util.GetInstance().LogError(e.ToString());
-            }
-        }
-
-
-        private void CalculateDistances()
-        {
-            try
-            {
-                HashSet<IMyEntity> entities = new HashSet<IMyEntity>();
-                HashSet<IMyCubeGrid> entitiesFiltered = new HashSet<IMyCubeGrid>();
-                List<IMyVoxelBase> asteroids = new List<IMyVoxelBase>();
-
-                MyAPIGateway.Entities.GetEntities(entities);
-                MyAPIGateway.Session.VoxelMaps.GetInstances(asteroids);
-
-                foreach (IMyEntity entity in entities)
-                {
-                    try
-                    {
-                        if (entity is IMyCubeGrid && !entity.Transparent && entity.Physics.Mass > 2000)
-                        {
-                            List<IMySlimBlock> blocks = new List<IMySlimBlock>();
-                            ((IMyCubeGrid)entity).GetBlocks(blocks);
-                            entitiesFiltered.Add((IMyCubeGrid)entity);
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        Util.GetInstance().LogError(e.ToString());
-                    }
-
-                }
-                MothershipDrone mom = null;
-                if (cManager.GetMotherships().Any())
-                    mom = cManager.GetMotherships()[0];
-
-                HashSet<Drone> Drones = GetDrones();
-
-                foreach (var monno in cManager.GetMotherships())
-                {
-                    Drones.Add(monno);
-                }
-            }
-            catch (Exception e)
             {
                 Util.GetInstance().LogError(e.ToString());
             }

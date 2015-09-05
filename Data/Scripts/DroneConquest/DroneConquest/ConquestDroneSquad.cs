@@ -74,11 +74,17 @@ namespace DroneConquest
 
                 //update mission details
 
-                foreach (var x in _drones)
+                _drones.ForEach(y => MyAPIGateway.Parallel.Do(delegate
                 {
-                    MyAPIGateway.Parallel.Do(delegate { try { x.Update(location); } catch (Exception) { } });
-                    //x.Update(location);
-                }
+                    try
+                    {
+                        y.Update(location);
+                    }
+                    catch (Exception)
+                    {
+                    }
+                })
+            );
                 //_drones.ForEach(x => x.Update(location));
 
             }

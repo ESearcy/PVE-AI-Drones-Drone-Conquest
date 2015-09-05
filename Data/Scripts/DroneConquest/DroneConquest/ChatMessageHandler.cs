@@ -13,6 +13,9 @@ namespace DroneConquest
         {
             if (gMessage == null)
                 return;
+            if (!Util.GetInstance().DebuggingOn)
+                return;
+
             var message = gMessage.ToLower();
             gMessage = null;
 

@@ -20,19 +20,24 @@ namespace DroneConquest
         private int ticks = 0;
         public void Update(Vector3D location)
         {
-            
-            if (ticks%5 == 0)
+            if (ticks%20 == 0)
+            {
                 FindNearbyStuff();
-            try
+            }
+            if (ticks%100 == 0)
             {
                 ReloadWeaponsAndReactors();
+            }
+            try
+            {
+                
                 Patrol(location);
             }
             catch (Exception e)
             {
                 Util.GetInstance().LogError(e.ToString());
             }
-            
+            NameBeacon();
             ticks++;
         }
 

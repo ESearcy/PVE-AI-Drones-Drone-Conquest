@@ -13,7 +13,7 @@ namespace DroneConquest
     {
         public MothershipDrone(IMyEntity ent, BroadcastingTypes broadcasting) : base(ent, broadcasting)
         {
-            ReloadWeaponsAndReactors(10);
+            ReloadWeaponsAndReactors();
             Type = typeof (MothershipDrone);
         }
 
@@ -21,10 +21,14 @@ namespace DroneConquest
 
         public void Update(List<Vector3D> asteroids)
         {
-            ReloadWeaponsAndReactors();
-
-            if (ticks%5 == 0)
+            if (ticks % 20 == 0)
+            {
                 FindNearbyStuff();
+            }
+            if (ticks % 100 == 0)
+            {
+                ReloadWeaponsAndReactors();
+            }
 
             //where to get a list of things to build an orbit path out of...
             

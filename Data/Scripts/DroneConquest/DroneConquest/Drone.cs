@@ -109,18 +109,10 @@ namespace DroneConquest
             ship.GetBlocks(lstSlimBlock, (x) => x.FatBlock is IMyShipController);
             FindWeapons();
 
-            if (_manualRockets.Count > 0 && _manualRockets[0] != null)
-            {
-                var actions = new List<ITerminalAction>();
-                var block = (IMySmallMissileLauncher)_manualRockets[0].FatBlock;
-                block.GetActions(actions);
+            
 
-                _fireRocket = block.GetActionWithName("Shoot_once");
-                _fireGun = block.GetActionWithName("Shoot");
-                _blockOff = block.GetActionWithName("OnOff_Off");
-                _blockOn = block.GetActionWithName("OnOff_On");
-            }
-            Util.GetInstance().Log("[Drone.IsAlive] Has Missile attack -> " + (_fireRocket != null) + " Has Gun Attack " + (_fireRocket != null), "drone.txt");
+
+            
 
             //If no cockpit the ship is either no ship or is broken.
             if (lstSlimBlock.Count != 0)
@@ -144,7 +136,7 @@ namespace DroneConquest
                     if (antenna != null)
                     {
                         //antenna.GetActionWithName("SetCustomName").Apply(antenna, new ListReader<TerminalActionParameter>(new List<TerminalActionParameter>() { TerminalActionParameter.Get("Combat Drone " + _manualGats.Count) }));
-                        antenna.SetValueFloat("Radius", antenna.GetMaximum<float>("Radius"));
+                        antenna.SetValueFloat("Radius", 5000);//antenna.GetMaximum<float>("Radius"));
                         ITerminalAction act = antenna.GetActionWithName("OnOff_On");
                         act.Apply(antenna);
                     }
@@ -157,7 +149,7 @@ namespace DroneConquest
                     IMyBeacon beacon = (IMyBeacon)block.FatBlock;
                     if (beacon != null)
                     {
-                        beacon.SetValueFloat("Radius", beacon.GetMaximum<float>("Radius"));
+                        beacon.SetValueFloat("Radius", 5000);//beacon.GetMaximum<float>("Radius"));
                         ITerminalAction act = beacon.GetActionWithName("OnOff_On");
                         act.Apply(beacon);
                     }
@@ -251,25 +243,27 @@ namespace DroneConquest
                 else
                     _blockOff.Apply(w.FatBlock);
             }
-            foreach (var w in _manualGuns)
-            {
-                if (isOn)
-                    _blockOn.Apply(w.FatBlock);
-                else
-                    _blockOff.Apply(w.FatBlock);
-            }
-            foreach (var w in _manualRockets)
-            {
-                if (isOn)
-                    _blockOn.Apply(w.FatBlock);
-                else
-                    _blockOff.Apply(w.FatBlock);
-            }
+            //foreach (var w in _manualGuns)
+            //{
+            //    if (isOn)
+            //        _blockOn.Apply(w.FatBlock);
+            //    else
+            //        _blockOff.Apply(w.FatBlock);
+            //}
+            //foreach (var w in _manualRockets)
+            //{
+            //    if (isOn)
+            //        _blockOn.Apply(w.FatBlock);
+            //    else
+            //        _blockOff.Apply(w.FatBlock);
+            //}
         }
 
         private int _weaponCount;
 
-        //locates gatling turrets and rocket luanchers
+        /*
+         * let me explain this stupid method....... nope, not much to explain because this is what I Had to do to get it to work.
+         */
         private void FindWeapons()
         {
             if (Ship == null)
@@ -288,7 +282,47 @@ namespace DroneConquest
             Ship.GetBlocks(_allReactors, (x) => x.FatBlock != null && x.FatBlock is IMyReactor);
             Ship.GetBlocks(_allWeapons, (x) => x.FatBlock != null && (x.FatBlock is IMyUserControllableGun));
 
-            
+            if (_fireGun==null && _manualRockets.Count > 0 && _manualRockets[0] != null)
+            {
+                var actions = new List<ITerminalAction>();
+                var block = (IMySmallMissileLauncher)_manualRockets[0].FatBlock;
+                block.GetActions(actions);
+
+                if (_fireRocket == null)
+                {
+                    foreach (var act in actions)
+                    {
+                        Util.GetInstance().Log("[Drone.IsAlive] Action Name " + act.Name.Replace(" ", "_"), "drone.txt");
+                        switch (act.Name.ToString())
+                        {
+                            case "Shoot_once":
+                                _fireRocket = act;
+                                break;
+                            case "Shoot_On":
+                                _fireGun = act;
+                                break;
+                            //case "OnOff_Off":
+                            //    _blockOff = act;
+                            //    break;
+                            //case "OnOff_On":
+                            //    _blockOn = act;
+                            //    break;
+                        }
+                    }
+                    Util.GetInstance().Log("[Drone.IsAlive] Action Length " + actions.Count, "drone.txt");
+
+                    //_fireRocket = block.GetActionWithName("Shoot_once");
+                    //_fireGun = block.GetActionWithName("Shoot");
+                    _blockOff = block.GetActionWithName("OnOff_Off");
+                    _blockOn = block.GetActionWithName("OnOff_On");
+
+                    Util.GetInstance()
+                        .Log(
+                            "[Drone.IsAlive] Has Missile attack -> " + (_fireRocket != null) + " Has Gun Attack " +
+                            (_fireRocket != null) + " off " + (_blockOff != null) + " on " + (_blockOn != null),
+                            "drone.txt");
+                }
+            }
 
             _weaponCount = _allWeapons.Count(x => (x.FatBlock).IsWorking || (x.FatBlock).IsFunctional);
         }
@@ -348,14 +382,17 @@ namespace DroneConquest
                     errors += "The ship is trashed: ";
                     shipWorking = false;
                 }
-                Util.GetInstance().Log("[Drone.IsAlive] Alive -> "+_allReactors.Count(x=>x.FatBlock.IsFunctional)+" : " + errors, "drone.txt");
+                
                 if (!shipWorking && navigation != null)
                 {
+
                     navigation.TurnOffGyros(false);
                     ManualFire(false);
                     _beaconName = "Disabled Drone: " + errors;
                     NameBeacon();
                 }
+                if(!shipWorking)
+                    Util.GetInstance().Log("[Drone.IsAlive] A Drone Has Died -> ", "droneDeaths.txt");
             }
 
             catch
@@ -432,17 +469,17 @@ namespace DroneConquest
             Ship.UpdateOwnership(id, true);
         }
 
-        //usses ammo manager to reload the inventories of the reactors and guns (does not use cargo blcks)
-        public void ReloadWeaponsAndReactors(int i =1)
+        //usses ammo manager to Reload the inventories of the reactors and guns (does not use cargo blcks)
+        public void ReloadWeaponsAndReactors()
         {
             Util.GetInstance().Log("Number of weapons reloading");
-            ItemManager.ReloadGuns(_manualGuns);
-            ItemManager.ReloadReactors(_allReactors, i);
+            ItemManager.Reload(_allWeapons);
+            ItemManager.ReloadReactors(_allReactors);
         }
 
 
         int missileStaggeredFireIndex = 0;
-        DateTime lastRocketFired = DateTime.Now;
+        DateTime _lastRocketFired = DateTime.Now;
         //turn on all weapons
         public void ManualFire(bool doFire)
         {
@@ -451,20 +488,19 @@ namespace DroneConquest
             {
                 foreach (var gun in _manualGuns)
                 {
-                    if (((IMyUserControllableGun)gun.FatBlock).IsShooting != true)
-                        _fireGun.Apply(gun.FatBlock);
+                    _fireGun.Apply(gun.FatBlock);
                 }
-                if ((DateTime.Now - lastRocketFired).TotalMilliseconds > 500)
+                if (Math.Abs((DateTime.Now - _lastRocketFired).TotalMilliseconds) > 500 && _fireRocket!=null)
                 {
                     var launcher = _manualRockets[missileStaggeredFireIndex];
-                    _fireRocket.Apply(launcher.FatBlock);
+                    _fireGun.Apply(launcher.FatBlock);
                     if (missileStaggeredFireIndex + 1 < _manualRockets.Count())
                     {
                         missileStaggeredFireIndex++;
                     }
                     else
                         missileStaggeredFireIndex = 0;
-                    lastRocketFired = DateTime.Now;
+                    _lastRocketFired = DateTime.Now;
                 }
             }
 
@@ -928,16 +964,31 @@ namespace DroneConquest
         {
             try
             {
+
                 if (broadcastingType == BroadcastingTypes.Beacon)
                 {
-                    FindBeacons();
-                    if (beacons != null && beacons.Count > 0)
+                    if (Util.GetInstance().DebuggingOn)
                     {
-                        CalculateDamagePercent();
-                        var beacon = beacons[0] as IMyBeacon;
-                        beacon.SetCustomName(_beaconName +
-                                             " HP: " + _healthPercent +
-                                             " MS: " + (int)Ship.Physics.LinearVelocity.Normalize() + "/" + (int)navigation.MaxSpeed);
+                        FindBeacons();
+                        if (beacons != null && beacons.Count > 0)
+                        {
+                            CalculateDamagePercent();
+                            var beacon = beacons[0] as IMyBeacon;
+                            beacon.SetCustomName(_beaconName +
+                                                 " HP: " + _healthPercent +
+                                                 " MS: " + (int) Ship.Physics.LinearVelocity.Normalize() + "/" +
+                                                 (int) navigation.MaxSpeed);
+                        }
+                    }
+                    else
+                    {
+                        FindBeacons();
+                        if (beacons != null && beacons.Count > 0)
+                        {
+                            CalculateDamagePercent();
+                            var beacon = beacons[0] as IMyBeacon;
+                            beacon.SetCustomName("HP: " + _healthPercent);
+                        }
                     }
                 }
                 else
@@ -950,14 +1001,28 @@ namespace DroneConquest
 
         public void NameAntenna()
         {
-            FindAntennas();
-            if (antennas != null && antennas.Count > 0)
+            if (Util.GetInstance().DebuggingOn)
             {
-                CalculateDamagePercent();
-                var antenna = antennas[0] as IMyRadioAntenna;
-                antenna.SetCustomName(_beaconName +
-                                             " HP: " + _healthPercent +
-                                             " MS: " + (int)Ship.Physics.LinearVelocity.Normalize() + "/" + (int)navigation.MaxSpeed);
+                FindAntennas();
+                if (antennas != null && antennas.Count > 0)
+                {
+                    CalculateDamagePercent();
+                    var antenna = antennas[0] as IMyRadioAntenna;
+                    antenna.SetCustomName(_beaconName +
+                                          " HP: " + _healthPercent +
+                                          " MS: " + (int) Ship.Physics.LinearVelocity.Normalize() + "/" +
+                                          (int) navigation.MaxSpeed);
+                }
+            }
+            else
+            {
+                FindAntennas();
+                if (antennas != null && antennas.Count > 0)
+                {
+                    CalculateDamagePercent();
+                    var antenna = antennas[0] as IMyRadioAntenna;
+                    antenna.SetCustomName("HP: " + _healthPercent);
+                } 
             }
         }
 

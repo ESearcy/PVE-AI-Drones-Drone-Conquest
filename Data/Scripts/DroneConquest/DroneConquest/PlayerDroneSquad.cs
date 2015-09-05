@@ -31,11 +31,21 @@ namespace DroneConquest
             UpdateComposition();
             Util.GetInstance().Log("[PlayerDroneSquad.Update] Updating "+_drones.Count+" Drones from squad "+myid);
             
-            foreach (var x in _drones)
-            {
-                MyAPIGateway.Parallel.Do(delegate { try { x.Update(location); } catch (Exception) { } });
-                //x.Update(location);
-            }
+            //foreach (var x in _drones)
+            //{
+            _drones.ForEach(y =>MyAPIGateway.Parallel.Do(delegate
+                {
+                    try
+                    {
+                        y.Update(location);
+                    }
+                    catch (Exception)
+                    {
+                    }
+                })
+            );
+            //x.Update(location);
+            //}
             //_drones.ForEach(x => x.Update(location));
         }
 

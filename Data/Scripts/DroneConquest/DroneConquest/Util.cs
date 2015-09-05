@@ -46,7 +46,7 @@ namespace DroneConquest
                     if (!MyAPIGateway.Utilities.FileExistsInLocalStorage(settingsFile, typeof(Util)))
                     {
 
-                        GameSettings = new XmlGameSettings() { MaxNumConquestSquads = 8, MaxNumDronesPerConquestSquad = 1, MaxPlayerDroneCount = 2 ,MaxNumGuardingDroneSquads = 2};
+                        GameSettings = new XmlGameSettings() { MaxNumConquestSquads = 10, MaxNumDronesPerConquestSquad = 1, MaxPlayerDroneCount = 2 ,MaxNumGuardingDroneSquads = 3, ConquestInfluenceRange = 10000};
 
                         var xmlstring = MyAPIGateway.Utilities.SerializeToXML(GameSettings);
 
@@ -130,38 +130,40 @@ namespace DroneConquest
         public void Help()
         {
             string helpMsg =
-            "Tested with up to 40 Conquest drones. Edit Game settings in: \r\n" +
-            "%APPDATA%\\Roaming\\SpaceEngineers\\Storage\\DroneConquest_DroneConquest\\DroneConquestSettingsFile.txt \r\n" +
-            "\r\n" +
-            "Player Drone Instructions:\r\n" +
-            "Name RemoteControl block : #PlayerDrone# Additional Arguments for RemoteControl name field\r\n" +
-            "*******(none of these are required and all have default values)********\r\n" +
-            "\r\n" +
-            "#on/off:power# -set power {on, off}\r\n" +
-            "Default value = on\r\n" +
-            "on = player can not manually override their drones controls when drone is online\r\n" +
-            "off = makes drone give up control of the remote control block for manual override\r\n" +
-            "\r\n" +
-            "#order:type# -set OrderName {guard, patrol, sentry}\r\n" +
-            "Default value = Guard. Orders drone to follow and orbit you, engaging any nearby enemies\r\n" +
-            "Patrol = Orders drone to patrol around their current location rather then follow their leader\r\n" +
-            "Sentry = Orders drones to stay put and only move to attack enemies that come near its area\r\n" +
-            "\r\n"+
-            "#broadcast:Type# -set Type {antenna, beacon}\r\n" +
-            "Default = Beacon\r\n" +
-            "Antenna = stats will be broadcasted via antenna if you do not set this then the drones stats will be broadcasted via Beacon\r\n" +
-            "\r\n" +
-            "#standing:type# -set type (passive, agressive)\r\n" +
-            "Default type = agressive\r\n" +
-            "\r\n" +
-            "#orbitrange:Number# - set Number (whole positive)\r\n" +
-            "default value = based on mass/size\r\n" +
-            "Number = Sets the drones orbit range.\r\n" +
-            "must be a non-negative number, value will be rounded down if not a whole number\r\n" +
-            "\r\n" +
-            "dc on\r\n" +
-            "dc off\r\n" +
-            "dc clear";
+                "Dont forget to give this mod a thumbs up!!!.\r\n" +
+                "\r\n" +
+                "Edit Game settings in: \r\n" +
+                "%APPDATA%\\Roaming\\SpaceEngineers\\Storage\\DroneConquest_DroneConquest\\DroneConquestSettingsFile.txt \r\n" +
+                "\r\n" +
+                "Player Drone Instructions:\r\n" +
+                "Name RemoteControl block : #PlayerDrone# Additional Arguments for RemoteControl name field\r\n" +
+                "*******(none of these are required and all have default values)********\r\n" +
+                "\r\n" +
+                "#on/off:power# -set power {on, off}\r\n" +
+                "Default value = on\r\n" +
+                "on = player can not manually override their drones controls when drone is online\r\n" +
+                "off = makes drone give up control of the remote control block for manual override\r\n" +
+                "\r\n" +
+                "#order:type# -set OrderName {guard, patrol, sentry}\r\n" +
+                "Default value = Guard. Orders drone to follow and orbit you, engaging any nearby enemies\r\n" +
+                "Patrol = Orders drone to patrol around their current location rather then follow their leader\r\n" +
+                "Sentry = Orders drones to stay put and only move to attack enemies that come near its area\r\n" +
+                "\r\n" +
+                "#broadcast:Type# -set Type {antenna, beacon}\r\n" +
+                "Default = Beacon\r\n" +
+                "Antenna = stats will be broadcasted via antenna if you do not set this then the drones stats will be broadcasted via Beacon\r\n" +
+                "\r\n" +
+                "#standing:type# -set type (passive, agressive)\r\n" +
+                "Default type = agressive\r\n" +
+                "\r\n" +
+                "#orbitrange:Number# - set Number (whole positive)\r\n" +
+                "default value = based on mass/size\r\n" +
+                "Number = Sets the drones orbit range.\r\n" +
+                "must be a non-negative number, value will be rounded down if not a whole number\r\n" +
+                "\r\n" +
+                "mode:Number - set type (whole positive)\r\n" +
+                "default value = AtRange - the drones will by default orbit you\r\n" +
+                "fighter = this makes the drone pick a static location in relation to you and stay there relitive to you.\r\n";
 
 
             MyAPIGateway.Utilities.ShowMissionScreen("Drone Conquest", "", "Help Guide", helpMsg, null, "OK");
@@ -175,7 +177,8 @@ namespace DroneConquest
 
         public void Notify(string message)
         {
-            if(DebuggingOn)
+            if (!DebuggingOn)
+                return;
                 MyAPIGateway.Utilities.ShowNotification(message, 2000);
         }
 

@@ -24,9 +24,11 @@ namespace DroneConquest
             MyAPIGateway.Utilities.MessageEntered += ChatMessageHandler.HandleMessage;
             _ticks = 0;
         }
+
         
         public override void UpdateBeforeSimulation()
         {
+            
             if (!MyAPIGateway.Multiplayer.IsServer)
                 return;
 
@@ -53,6 +55,7 @@ namespace DroneConquest
                     manager.ClearAllDrones();
                     cHandle.SetStatus(GameCommands.On);
                 }
+                
 
                 _ticks++;
             }

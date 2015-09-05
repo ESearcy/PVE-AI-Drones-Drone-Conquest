@@ -27,7 +27,7 @@ namespace DroneConquest
                     TakeInPlayerNameLineArgs();
                 Util.GetInstance().Log("[Drone.Guard] Start: " + myNumber);
 
-                if (ticks%5 == 0)
+                if (ticks%20 == 0)
                     FindNearbyStuff();
 
                 if (_isOnline)
@@ -73,6 +73,7 @@ namespace DroneConquest
                 Util.GetInstance().LogError(e.ToString());
             }
             Util.GetInstance().Log("[Drone.Guard] End: " + myNumber);
+            NameBeacon();
             ticks++;
         }
 

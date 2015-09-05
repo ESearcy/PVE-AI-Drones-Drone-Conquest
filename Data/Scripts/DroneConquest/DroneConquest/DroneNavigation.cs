@@ -417,7 +417,7 @@ namespace DroneConquest
                     _currentCoord = 0;
                     foreach (var loc in positions)
                     {
-                        _coords.Add(loc + new Vector3D());
+                        _coords.Add(loc + new Vector3D(1000,1000,1000));
                         Util.GetInstance()
                             .Log(
                                 "[ConquestDroneManager.GenerateMission] Asteroid " +
@@ -442,7 +442,7 @@ namespace DroneConquest
                             .Log("[ConquestDroneManager.GenerateMission] CustomPoint " + vect,
                                 "mothershipFlightPath.txt");
                         i++;
-                    } while (i < 40);
+                    } while (i < 10);
                     _previousCoord = _coords.Count() - 1;
                 }
             }

@@ -144,7 +144,7 @@ namespace DroneConquest
             var dro = GetDrones();
 
             if (DronesPerConquestSquad * MaxNumConquestSquads > dro.Count)
-                spawner.SpawnShip(type, new Vector3D(r.Next(0), r.Next(0), r.Next(0)));
+                spawner.SpawnShip(type, new Vector3D(r.Next(DroneMaxRange/2), r.Next(DroneMaxRange/2), r.Next(DroneMaxRange/2)));
             
         }
 

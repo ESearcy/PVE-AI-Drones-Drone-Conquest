@@ -32,7 +32,7 @@ namespace DroneConquest
 
             //where to get a list of things to build an orbit path out of...
             
-            Orbit(asteroids);
+            Orbit(asteroids.Where(x=>(x - new Vector3D(0,0,0)).Length()<ConquestDroneManager.DroneMaxRange).ToList());
             NameBeacon();
             ticks++;
         }

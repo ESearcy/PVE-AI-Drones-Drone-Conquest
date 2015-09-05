@@ -1,11 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
 using Sandbox.ModAPI.Ingame;
 using VRage.ModAPI;
 using VRageMath;
 using IMyCubeBlock = Sandbox.ModAPI.IMyCubeBlock;
 using IMyCubeGrid = Sandbox.ModAPI.Ingame.IMyCubeGrid;
+using IMyTerminalBlock = Sandbox.ModAPI.IMyTerminalBlock;
 
 
 namespace DroneConquest
@@ -23,7 +26,7 @@ namespace DroneConquest
         {
             try
             {
-                if (ticks%200 == 0)
+                if (ticks%10 == 0)
                     TakeInPlayerNameLineArgs();
                 Util.GetInstance().Log("[Drone.Guard] Start: " + myNumber);
 
@@ -161,15 +164,34 @@ namespace DroneConquest
                 }
             }
         }
+
+        private IMyRemoteControl cmdline = null;
+
+        private void FindCmdLine()
+        {
+            if (Ship == null || cmdline != null)
+                return;
+
+            IMyGridTerminalSystem gridTerminal = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(Ship);
+            List<Sandbox.ModAPI.Ingame.IMyTerminalBlock> T = new List<Sandbox.ModAPI.Ingame.IMyTerminalBlock>();
+            gridTerminal.GetBlocksOfType<IMyTerminalBlock>(T);
+            cmdline = T.FirstOrDefault(x => (x).CustomName.Contains("#PlayerDrone#")) as IMyRemoteControl;
+
+        }
+
         private void TakeInPlayerNameLineArgs()
         {
+            Util.GetInstance().Log("[PlayerDrone.Update] ================Loading cmdlne =================", orderlog);
+            FindCmdLine();
             try
             {
-                if (ShipControls != null && ((IMyCubeBlock) ShipControls).IsWorking)
+                if (cmdline != null && ((IMyCubeBlock)cmdline).IsWorking)
                 {
-                    string[] args = ((IMyRemoteControl) ShipControls).CustomName.Trim().Split('#');
+                    string[] args = ((IMyRemoteControl)cmdline).CustomName.Trim().ToLower().Split('#');
+                    Util.GetInstance().Log("[PlayerDrone.Update] Number of Player commands " + ((IMyRemoteControl)cmdline).CustomName + " : " + ((IMyCubeBlock)cmdline).Name + " : " + args.Count(), orderlog);
                     foreach (var arg in args)
                     {
+                        Util.GetInstance().Log("[PlayerDrone.Update]" + arg, orderlog);
                         string[] commandValue = arg.Split(':');
 
                         if (commandValue.Length == 2)
@@ -218,6 +240,7 @@ namespace DroneConquest
             {
                 mode = DroneModes.Fighter;
             }
+            Util.GetInstance().Log("[PlayerDrone.Update] updating mode to " + args[1], orderlog);
         }
 
 
@@ -235,7 +258,7 @@ namespace DroneConquest
                 standing = Standing.Passive;
             }
 
-            Util.GetInstance().Log("[PlayerDrone.Update] updating orbitrange to " + args[1]);
+            Util.GetInstance().Log("[PlayerDrone.Update] updating orbitrange to " + args[1], orderlog);
         }
 
 
@@ -246,7 +269,7 @@ namespace DroneConquest
 
             double radius = navigation.FollowRange;
             if(double.TryParse(args[1], out radius))
-                Util.GetInstance().Log("[PlayerDrone.Update] updating orbitrange to "+args[1]);
+                Util.GetInstance().Log("[PlayerDrone.Update] updating orbitrange to " + args[1], orderlog);
             navigation.FollowRange = (float)radius;
         }
 
@@ -258,32 +281,31 @@ namespace DroneConquest
             if (args[1].ToLower().Contains("beacon"))
             {
                 broadcastingType = BroadcastingTypes.Beacon;
-                Util.GetInstance().Log("[PlayerDrone.Update] updating broadcastingtype to " + args[1]);
+                Util.GetInstance().Log("[PlayerDrone.Update] updating broadcastingtype to " + args[1], orderlog);
             }
             else if(args[1].ToLower().Contains("antenna"))
             {
                 broadcastingType = BroadcastingTypes.Antenna;
-                Util.GetInstance().Log("[PlayerDrone.Update] updating broadcastingtype to " + args[1]);
+                Util.GetInstance().Log("[PlayerDrone.Update] updating broadcastingtype to " + args[1], orderlog);
             }
         }
 
-        
+        private string orderlog = "playerDroneCmdLne.txt";
 
         private void SetOrderType(string[] args)
         {
             if (args.Length != 2)
                 return;
-
             switch (args[1].ToLower().Trim())
             {
                 case "return":
                     _currentOrder = ActionTypes.Return;
-                    Util.GetInstance().Log("[PlayerDrone.Update] updating order to " + args[1]);
+                    Util.GetInstance().Log("[PlayerDrone.Update] updating order to " + args[1], orderlog);
                     break;
 
                 case "guard":
                     _currentOrder = ActionTypes.Return;
-                    Util.GetInstance().Log("[PlayerDrone.Update] updating order to " + args[1]);
+                    Util.GetInstance().Log("[PlayerDrone.Update] updating order to " + args[1], orderlog);
                     break;
 
                 case "sentry":
@@ -292,11 +314,11 @@ namespace DroneConquest
 
                     _currentOrder = ActionTypes.Sentry;
 
-                    Util.GetInstance().Log("[PlayerDrone.Update] updating order to " + args[1]);
+                    Util.GetInstance().Log("[PlayerDrone.Update] updating order to " + args[1], orderlog);
                     break;
                 case "orbit":
                     _currentOrder = ActionTypes.Orbit;
-                    Util.GetInstance().Log("[PlayerDrone.Update] updating order to " + args[1]);
+                    Util.GetInstance().Log("[PlayerDrone.Update] updating order to " + args[1], orderlog);
                     break;
             }
 
@@ -317,6 +339,7 @@ namespace DroneConquest
                 Util.GetInstance().Log("[PlayerDrone.Update] updating on/off to " + args[1]);
                 _isOnline = false;
             }
+            Util.GetInstance().Log("[PlayerDrone.Update] updating on/off to " + args[1], orderlog);
         }
 
 

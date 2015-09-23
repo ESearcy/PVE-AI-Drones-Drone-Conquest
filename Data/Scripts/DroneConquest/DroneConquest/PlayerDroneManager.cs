@@ -121,7 +121,11 @@ namespace DroneConquest
         {
             foreach (var squad in DroneOwners.Values)
             {
-                squad.ClearAllDrones();
+                try
+                {
+                    squad.ClearAllDrones();
+                }
+                catch (Exception) { }
             }
         }
     }

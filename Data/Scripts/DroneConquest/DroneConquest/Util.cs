@@ -129,6 +129,7 @@ namespace DroneConquest
 
         public void Help()
         {
+            return;
             string helpMsg =
                 "Dont forget to give this mod a thumbs up!!!.\r\n" +
                 "\r\n" +

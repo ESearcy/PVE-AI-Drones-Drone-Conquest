@@ -111,7 +111,7 @@ namespace DroneConquest
         public void RebuildLostDrones()
         {
             ConquestDrones type;
-                var val = r.Next(10);
+                var val = r.Next(8);
 
             switch (val)
             {
@@ -127,11 +127,20 @@ namespace DroneConquest
                 case 4:
                         type = ConquestDrones.MediumOne;
                         break;
-                //case 0:
-                //        type = ConquestDrones.MediumTwo;
+                case 5:
+                        type = ConquestDrones.MediumTwo;
+                        break;
+                case 6:
+                        type = ConquestDrones.MediumThree;
+                        break;
+                case 7:
+                        type = ConquestDrones.LargeThree;
+                        break;
+                //case 8:
+                //        type = ConquestDrones.LargeOne; // this is mothership.
                 //        break;
                 default:
-                        type = ConquestDrones.SmallTwo;
+                        type = ConquestDrones.LargeTwo;
                         break;
             }
 
@@ -287,7 +296,11 @@ namespace DroneConquest
         {
             foreach (var sq in _squads)
             {
-                sq.ClearAllDrones();
+                try
+                {
+                    sq.ClearAllDrones();
+                }
+                catch(Exception){}
             }
         }
 

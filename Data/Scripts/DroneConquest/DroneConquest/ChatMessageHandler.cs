@@ -13,8 +13,7 @@ namespace DroneConquest
         {
             if (gMessage == null)
                 return;
-            if (!Util.GetInstance().DebuggingOn)
-                return;
+
 
             var message = gMessage.ToLower();
             gMessage = null;
@@ -42,18 +41,13 @@ namespace DroneConquest
                 Util.GetInstance().Log("[ChatMessageHandler.HandleMessageContents] Setting game Mode Off");
                 return;
             }
+            if (!Util.GetInstance().DebuggingOn)
+                return;
 
             if (message.Contains("clear"))
             {
                 _status = GameCommands.Clearing;
                 Util.GetInstance().Log("[ChatMessageHandler.HandleMessageContents] Setting game Mode Clearing");
-                return;
-            }
-
-            if (message.Contains("report"))
-            {
-                _status = GameCommands.Reporting;
-                Util.GetInstance().Log("[ChatMessageHandler.HandleMessageContents] Setting game Mode Reporting");
                 return;
             }
         }
@@ -74,10 +68,7 @@ namespace DroneConquest
 
         private void DisplayGameCommands()
         {
-            Util.GetInstance().Notify("dc on: turns on the mod");
-            Util.GetInstance().Notify("dc off: pauses the mod");
-            Util.GetInstance().Notify("dc clear: deletes all drones (clear up some lag)");
-            Util.GetInstance().Notify("dc report: displays number of Active/Disabled Drones");
+            Util.GetInstance().Help();
         }
 
         public GameCommands GetStatus()

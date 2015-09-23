@@ -30,6 +30,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="HavokWrapper, Version=1.0.5710.24138, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>D:\Steam\steamapps\common\SpaceEngineers\Bin\HavokWrapper.dll</HintPath>
+    </Reference>
     <Reference Include="Sandbox.Common">
       <HintPath>D:\Steam\steamapps\common\SpaceEngineers\Bin\Sandbox.Common.dll</HintPath>
     </Reference>

@@ -37,10 +37,10 @@ namespace DroneConquest
 
         internal double HealthBlockBase = 0;
         internal string _healthPercent = 100 + "%";
-        internal ITerminalAction _fireGun;
-        internal ITerminalAction _fireRocket;
-        internal ITerminalAction _blockOn;
-        internal ITerminalAction _blockOff;
+        internal static ITerminalAction _fireGun;
+        internal static ITerminalAction _fireRocket;
+        internal static ITerminalAction _blockOn;
+        internal static ITerminalAction _blockOff;
 
         internal string _beaconName = "CombatDrone";
 
@@ -108,7 +108,7 @@ namespace DroneConquest
             //If it has any type of cockipt
             ship.GetBlocks(lstSlimBlock, (x) => x.FatBlock is IMyShipController);
             FindWeapons();
-
+            SetupActions();
             
 
 
@@ -136,9 +136,8 @@ namespace DroneConquest
                     if (antenna != null)
                     {
                         //antenna.GetActionWithName("SetCustomName").Apply(antenna, new ListReader<TerminalActionParameter>(new List<TerminalActionParameter>() { TerminalActionParameter.Get("Combat Drone " + _manualGats.Count) }));
-                        antenna.SetValueFloat("Radius", 5000);//antenna.GetMaximum<float>("Radius"));
-                        ITerminalAction act = antenna.GetActionWithName("OnOff_On");
-                        act.Apply(antenna);
+                        antenna.SetValueFloat("Radius", 10000);//antenna.GetMaximum<float>("Radius"));
+                        _blockOn.Apply(antenna);
                     }
                 }
 
@@ -149,9 +148,8 @@ namespace DroneConquest
                     IMyBeacon beacon = (IMyBeacon)block.FatBlock;
                     if (beacon != null)
                     {
-                        beacon.SetValueFloat("Radius", 5000);//beacon.GetMaximum<float>("Radius"));
-                        ITerminalAction act = beacon.GetActionWithName("OnOff_On");
-                        act.Apply(beacon);
+                        beacon.SetValueFloat("Radius", 10000);//beacon.GetMaximum<float>("Radius"));
+                        _blockOn.Apply(beacon);
                     }
                 }
 
@@ -171,6 +169,7 @@ namespace DroneConquest
                 GridTerminalSystem.GetBlocksOfType<IMyCubeBlock>(allTerminalBlocks);
                 HealthBlockBase = allTerminalBlocks.Count;
 
+                
                 if (ShipControls != null)
                 {
                     
@@ -217,9 +216,7 @@ namespace DroneConquest
             List<IMyTerminalBlock> allTerminalBlocks =
                     new List<IMyTerminalBlock>();
 
-
             GridTerminalSystem.GetBlocksOfType<IMyCubeBlock>(allTerminalBlocks);
-
             
             double count = 0;
             foreach (var block in allTerminalBlocks)
@@ -259,8 +256,6 @@ namespace DroneConquest
             //}
         }
 
-        private int _weaponCount;
-
         /*
          * let me explain this stupid method....... nope, not much to explain because this is what I Had to do to get it to work.
          */
@@ -281,18 +276,20 @@ namespace DroneConquest
 
             Ship.GetBlocks(_allReactors, (x) => x.FatBlock != null && x.FatBlock is IMyReactor);
             Ship.GetBlocks(_allWeapons, (x) => x.FatBlock != null && (x.FatBlock is IMyUserControllableGun));
+        }
 
-            if (_fireGun==null && _manualRockets.Count > 0 && _manualRockets[0] != null)
+        private void SetupActions()
+        {
+            if (_fireGun == null && _allWeapons.Count > 0 && _allWeapons[0] != null)
             {
                 var actions = new List<ITerminalAction>();
-                var block = (IMySmallMissileLauncher)_manualRockets[0].FatBlock;
-                block.GetActions(actions);
 
+                ((IMyUserControllableGun)_allWeapons[0].FatBlock).GetActions(actions);
                 if (_fireRocket == null)
                 {
                     foreach (var act in actions)
                     {
-                        Util.GetInstance().Log("[Drone.IsAlive] Action Name " + act.Name.Replace(" ", "_"), "drone.txt");
+                        Util.GetInstance().Log("[Drone.IsAlive] Action Name " + act.Name.Replace(" ", "_"), "weapons.txt");
                         switch (act.Name.ToString())
                         {
                             case "Shoot_once":
@@ -301,32 +298,23 @@ namespace DroneConquest
                             case "Shoot_On":
                                 _fireGun = act;
                                 break;
-                            //case "OnOff_Off":
-                            //    _blockOff = act;
-                            //    break;
-                            //case "OnOff_On":
-                            //    _blockOn = act;
-                            //    break;
+                            case "Toggle_block_Off":
+                                _blockOff = act;
+                                break;
+                            case "Toggle_block_On":
+                                _blockOn = act;
+                                break;
                         }
                     }
-                    Util.GetInstance().Log("[Drone.IsAlive] Action Length " + actions.Count, "drone.txt");
-
-                    //_fireRocket = block.GetActionWithName("Shoot_once");
-                    //_fireGun = block.GetActionWithName("Shoot");
-                    _blockOff = block.GetActionWithName("OnOff_Off");
-                    _blockOn = block.GetActionWithName("OnOff_On");
 
                     Util.GetInstance()
                         .Log(
                             "[Drone.IsAlive] Has Missile attack -> " + (_fireRocket != null) + " Has Gun Attack " +
                             (_fireRocket != null) + " off " + (_blockOff != null) + " on " + (_blockOn != null),
-                            "drone.txt");
+                            "weapons.txt");
                 }
             }
-
-            _weaponCount = _allWeapons.Count(x => (x.FatBlock).IsWorking || (x.FatBlock).IsFunctional);
         }
-
         //All three must be true
         //Ship is not trash
         //Ship Controlls are functional
@@ -486,11 +474,17 @@ namespace DroneConquest
             SetWeaponPower(doFire);
             if (doFire)
             {
+                Util.GetInstance()
+                    .Log(_fireGun + "[Drone.ManualFire] Number of guns -> " + _manualGuns.Count, "weapons.txt");
+                Util.GetInstance()
+                    .Log(_fireGun + "[Drone.ManualFire] number of all weapons -> " + _allWeapons.Count, "weapons.txt");
                 foreach (var gun in _manualGuns)
                 {
                     _fireGun.Apply(gun.FatBlock);
                 }
-                if (Math.Abs((DateTime.Now - _lastRocketFired).TotalMilliseconds) > 500 && _fireRocket!=null)
+
+                if (Math.Abs((DateTime.Now - _lastRocketFired).TotalMilliseconds) > 200 && _fireRocket != null &&
+                    _manualRockets.Count > 0)
                 {
                     var launcher = _manualRockets[missileStaggeredFireIndex];
                     _fireGun.Apply(launcher.FatBlock);
@@ -503,6 +497,13 @@ namespace DroneConquest
                     _lastRocketFired = DateTime.Now;
                 }
             }
+            //else
+            //{
+            //    foreach (var VARIABLE in _allWeapons)
+            //    {
+            //        _blockOff.Apply((IMyCubeBlock)VARIABLE.FatBlock);
+            //    }
+            //}
 
             
 
@@ -563,7 +564,7 @@ namespace DroneConquest
 
 
                         bool isOnline =
-                            reactorBlocks.Exists(x => (((IMyPowerProducer)x).CurrentPowerOutput > 0 && x.IsWorking) && !isFriendly);
+                            reactorBlocks.Exists(x => (x.IsWorking) && !isFriendly);
 
                         bool isDrone =
                             T.Exists(
@@ -571,10 +572,6 @@ namespace DroneConquest
                                     (((IMyRemoteControl)x).CustomName.Contains("Drone#") && x.IsWorking &&
                                         !isFriendly));
 
-                        bool isMothership =
-                            T.Exists(x => x.CustomName.Contains("#ConquestMothership"));
-
-                            
 
                         var droneControl =
                             (IMyEntity)
@@ -587,6 +584,9 @@ namespace DroneConquest
                                 reactorBlocks.FirstOrDefault(
                                     x => (((IMyPowerProducer)x).CurrentPowerOutput > 0 && x.IsWorking) && !isFriendly);
 
+
+                        Util.GetInstance().Log(entity.Name+"   "+isOnline + ":Online " + isDrone + ":Drone " + (shipPower != null) + ":hasPower", "friendly.txt");
+                        Util.GetInstance().Log(" ", "friendly.txt");
                         if (isDrone && isOnline)
                         {
                             nearbyDrones.Add(grid, droneControl);
@@ -688,12 +688,16 @@ namespace DroneConquest
             foreach (var block in gridblocks)
             {
                 var temp = MyAPIGateway.Session.Factions.TryGetPlayerFaction((block).OwnerId);
-                if (temp != null && myfaction != null && temp == myfaction)
+
+                if (temp != null && myfaction != null && temp != default(IMyFaction) && temp == myfaction)
                 {
+                    
                         return true;
                 }
+                if (temp != null && myfaction != null)
+                    Util.GetInstance().Log(temp.Name + " " + myfaction.Name, "friendly.txt");
             }
-
+            Util.GetInstance().Log(isFriendly+ " ", "friendly.txt");
             return isFriendly; 
 
             //this shit doesnt work even though it should, maybe i just did it wrong.

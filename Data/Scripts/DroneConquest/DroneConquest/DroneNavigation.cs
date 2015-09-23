@@ -199,7 +199,6 @@ namespace DroneConquest
         {
             StopSpin();
             _shipControls.MoveAndRotateStopped();
-            
         }
 
         private void StopSpin()
@@ -855,7 +854,7 @@ namespace DroneConquest
                             if (item != null)
                             {
                                 var distance = Math.Abs((item.GetPosition() - Ship.GetPosition()).Length());
-                                var enemyBoundingBoxSize = (item.GetPosition() - item.LocalAABB.Max).Length();
+                                var enemyBoundingBoxSize = item.LocalAABB.Max.Normalize();
 
                                 MaxSpeed = MaxSpeed > distance/ApproachSpeedMod ? distance/ApproachSpeedMod : MaxSpeed;
                                 var detectRange = _avoidanceRange + enemyBoundingBoxSize;
